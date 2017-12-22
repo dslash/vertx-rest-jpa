@@ -1,2 +1,2 @@
 # vertx-rest-jpa
-Persistence for REST resources in the filesystem or a JPA supported database.
+Persistence mapping between REST resources and JPA entities.
