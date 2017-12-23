@@ -36,21 +36,15 @@ public class JpaRestResource {
    */
   private final EntityManagerFactory emf;
 
-  /**
-   * Options.
-   */
-  private final JpaRestRouterOptions options;
-
 
   /**
    * Constructor
    *
    * @param router the router
-   * @param options
+   * @param options the options
    */
   public JpaRestResource(Router router, JpaRestRouterOptions options) {
     emf = Persistence.createEntityManagerFactory(options.jpaUnitName());
-    this.options = options;
     this.router = router;
   }
 

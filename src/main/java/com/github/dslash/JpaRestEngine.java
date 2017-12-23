@@ -5,9 +5,6 @@ import io.vertx.ext.web.Router;
 import javax.persistence.FetchType;
 import javax.persistence.OneToOne;
 import java.lang.reflect.Field;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.util.Collection;
 
 /**
  * Build routes for entities
@@ -29,7 +26,7 @@ public class JpaRestEngine {
    * Constructor
    *
    * @param router the router
-   * @param options
+   * @param options The options
    */
   public JpaRestEngine(Router router, JpaRestRouterOptions options) {
     this.router = router;
@@ -48,13 +45,7 @@ public class JpaRestEngine {
     String currentPath = restResource.createEndPoints(path, rootEntity);
 
     for (Field field : rootEntity.getDeclaredFields()) {
-      if (Collection.class.isAssignableFrom(field.getType())) {
-        Type genericType = field.getGenericType();
-        ParameterizedType parameterizedType = (ParameterizedType) genericType;
-        Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
-        Type actualTypeArgument = actualTypeArguments[0];
-        // restResource.addSubCollection((Class<?>) actualTypeArgument);
-      } else if (!field.getType().isPrimitive() && !field.getType().getName().startsWith("java")) {
+      if (!field.getType().isPrimitive() && !field.getType().getName().startsWith("java")) {
         OneToOne oneToOne = field.getAnnotation(OneToOne.class);
         if (oneToOne != null && oneToOne.fetch() == FetchType.LAZY) { // load on demand..
           restResource.addSubEntity(currentPath, field.getType()); // build endPoints
