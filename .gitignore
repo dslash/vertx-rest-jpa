@@ -1,3 +1,5 @@
 *.jar
 .idea
 target
+*.iml
+.DS_Store
