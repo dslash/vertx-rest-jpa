@@ -33,7 +33,7 @@ public class JpaRestRouterTest {
    * Timeout for all test methods.
    */
   @Rule
-  public Timeout timeoutRule = new Timeout(50, TimeUnit.SECONDS);
+  public Timeout timeoutRule = new Timeout(5, TimeUnit.SECONDS);
 
   /**
    * Vertx instance.
@@ -55,7 +55,9 @@ public class JpaRestRouterTest {
   public void setUp(TestContext test) {
     Async async = test.async();
     vertx = vertxContext.vertx();
-    target = JpaRestRouter.create(vertx, new JpaRestRouterOptions());
+    target = JpaRestRouter.create(vertx, new JpaRestRouterOptions()
+      .setJpaUnitName("jpa-test")
+      .setRootUri("/api/v1"));
     target.listen(LISTENING_PORT, onDone -> async.complete());
   }
 
@@ -66,7 +68,7 @@ public class JpaRestRouterTest {
   }
 
   @Test
-  public void shouldGetCreatedBooks(TestContext test) {
+  public void shouldPerformSimpleCrudOperationToBooks(TestContext test) {
     Async async = test.async();
     HttpClient client = vertx.createHttpClient();
     Future<Void> globalFuture = Future.future();
@@ -82,7 +84,10 @@ public class JpaRestRouterTest {
       // Check 0 book
       test.assertEquals(0, jsonArray.size());
       // A a book
-      return addBook(client, new JsonObject().put("name", "MyBook1").put("pageCount", 456));
+      return addBook(client, new JsonObject()
+        .put("author", new JsonObject().put("name", "Peter"))
+        .put("name", "MyBook1")
+        .put("pageCount", 456));
     }).compose(jsonObject -> {
       // Check the uuid field is filled
       test.assertNotNull(jsonObject.getString("uuid"));
@@ -93,6 +98,8 @@ public class JpaRestRouterTest {
       JsonObject book = jsonArray.getJsonObject(0);
       test.assertEquals("MyBook1", book.getString("name"));
       test.assertEquals(456, book.getInteger("pageCount"));
+      test.assertNotNull(book.getJsonObject("author"));
+      test.assertEquals("Peter", book.getJsonObject("author").getString("name"));
       test.assertNotNull(book.getString("uuid"));
       // Delete the book
       return deleteBook(client, book.getString("uuid"));
@@ -109,7 +116,7 @@ public class JpaRestRouterTest {
   // Get books
   private Future<JsonArray> getBooks(HttpClient client) {
     Future<JsonArray> future = Future.future();
-    client.getNow(LISTENING_PORT, "localhost", "/books", resp -> resp.bodyHandler(body -> {
+    client.getNow(LISTENING_PORT, "localhost", "/api/v1/books", resp -> resp.bodyHandler(body -> {
       future.complete(body.toJsonArray());
     }));
     return future;
@@ -118,7 +125,7 @@ public class JpaRestRouterTest {
   // add book
   private Future<JsonObject> addBook(HttpClient client, JsonObject data) {
     Future<JsonObject> future = Future.future();
-    client.post(LISTENING_PORT, "localhost", "/books", resp -> resp.bodyHandler(body -> {
+    client.post(LISTENING_PORT, "localhost", "/api/v1/books", resp -> resp.bodyHandler(body -> {
       future.complete(body.toJsonObject());
     })).end(data.encode());
     return future;
@@ -127,7 +134,7 @@ public class JpaRestRouterTest {
   // delete book
   private Future<Void> deleteBook(HttpClient client, String uuid) {
     Future<Void> future = Future.future();
-    client.delete(LISTENING_PORT, "localhost", "/books/" + uuid, resp -> {
+    client.delete(LISTENING_PORT, "localhost", "/api/v1/books/" + uuid, resp -> {
       if (resp.statusCode() != 204) {
         future.fail("Status code not correct: " + resp.statusCode());
       } else {

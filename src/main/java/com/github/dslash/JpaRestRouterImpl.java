@@ -40,6 +40,11 @@ public class JpaRestRouterImpl implements JpaRestRouter {
   private final HttpServer server;
 
   /**
+   * Options.
+   */
+  private final JpaRestRouterOptions options;
+
+  /**
    * Constructor (package only)
    *
    * @param vertx                Vertx instance
@@ -49,6 +54,7 @@ public class JpaRestRouterImpl implements JpaRestRouter {
     router = Router.router(vertx);
     router.route().handler(BodyHandler.create());
     server = vertx.createHttpServer();
+    options = jpaRestRouterOptions;
     createRestEngine();
   }
 
@@ -56,13 +62,13 @@ public class JpaRestRouterImpl implements JpaRestRouter {
    * Create routes for all found entities.
    */
   private void createRestEngine() {
-    InputStream fileStream = getClass().getClassLoader().getResourceAsStream("META-INF/persistence.xml");
+    InputStream fileStream = getClass().getClassLoader().getResourceAsStream(options.jpaUnitPath());
     if (fileStream != null) {
-      JpaRestEngine engine = new JpaRestEngine(router);
+      JpaRestEngine engine = new JpaRestEngine(router, options);
       List<Class<?>> entities = getEntitiesFromJpaContext();
-      entities.forEach(entity -> engine.register("", entity));
+      engine.register(options.rootUri(), entities.get(0));
     } else {
-      LOGGER.error("Can not find JPA configuration file. Please check if file 'META-INF/persistence.xml' exists");
+      LOGGER.error("Can not find JPA configuration file. Please check if file 'options.jpaUnitPath()' exists");
     }
   }
 
@@ -70,7 +76,7 @@ public class JpaRestRouterImpl implements JpaRestRouter {
    * @return The entities (class.getName())
    */
   private List<Class<?>> getEntitiesFromJpaContext() {
-    EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("jpa-unit");
+    EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory(options.jpaUnitName());
     Set<EntityType<?>> entities = entityManagerFactory.getMetamodel().getEntities();
     return entities.stream().map(Type::getJavaType).collect(Collectors.toList());
   }

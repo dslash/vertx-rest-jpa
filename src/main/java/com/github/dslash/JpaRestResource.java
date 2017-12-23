@@ -18,10 +18,8 @@ import java.util.List;
 
 /**
  * Rest resource
- *
- * @param <T> Type of entity
  */
-public class JpaRestResource<T> {
+public class JpaRestResource {
 
   /**
    * Logger.
@@ -34,34 +32,26 @@ public class JpaRestResource<T> {
   private final Router router;
 
   /**
-   * Entity class.
-   */
-  private final Class<T> entityClass;
-
-  /**
    * Manager factory.
    */
   private final EntityManagerFactory emf;
 
   /**
-   * Constructor
-   *
-   * @param router      the router
-   * @param entityClass the entity class
+   * Options.
    */
-  public JpaRestResource(Router router, Class<T> entityClass) {
-    emf = Persistence.createEntityManagerFactory("jpa-unit");
-    this.entityClass = entityClass;
-    this.router = router;
-  }
+  private final JpaRestRouterOptions options;
+
 
   /**
-   * Create end points for the entity
+   * Constructor
    *
-   * @param rootPath the root path
+   * @param router the router
+   * @param options
    */
-  public void createEndPoints(String rootPath) {
-    this.createEndPoints(rootPath, this.entityClass);
+  public JpaRestResource(Router router, JpaRestRouterOptions options) {
+    emf = Persistence.createEntityManagerFactory(options.jpaUnitName());
+    this.options = options;
+    this.router = router;
   }
 
   /**
@@ -70,19 +60,31 @@ public class JpaRestResource<T> {
    * @param rootPath    the root Path
    * @param entityClass the entity class
    */
-  private void createEndPoints(String rootPath, Class<?> entityClass) {
-    String resourceName = "/" + English.plural(entityClass.getSimpleName().toLowerCase());
+  public <T> String createEndPoints(String rootPath, Class<T> entityClass) {
+    String className = entityClass.getSimpleName().toLowerCase();
+    String resourceName = "/" + English.plural(className);
     String resourcePath = rootPath + resourceName;
 
     LOGGER.debug("Registration of [GET] " + resourcePath);
-    router.get(resourcePath).blockingHandler(this::onGetReceived);
+    router.get(resourcePath).blockingHandler(rc -> onGetReceived(rc, entityClass));
 
     LOGGER.debug("Registration of [POST] " + resourcePath);
-    router.post(resourcePath).blockingHandler(this::onPostReceived);
+    router.post(resourcePath).blockingHandler(rc -> onPostReceived(rc, entityClass));
 
-    String path = resourcePath + "/:id";
+    String path = resourcePath + "/:" + className + "_id";
     LOGGER.debug("Registration of [DELETE] " + path);
-    router.delete(path).blockingHandler(this::onDeleteReceived);
+    router.delete(path).blockingHandler(rc -> onDeleteReceived(rc, entityClass, className + "_id"));
+
+    return path;
+  }
+
+  /**
+   * Permet d'ajout une sous route liée à l'entitée gérée
+   *
+   * @param type Le type
+   */
+  public <T> void addSubEntity(String rootPath, Class<T> type) {
+    createEndPoints(rootPath, type);
   }
 
   /**
@@ -90,7 +92,7 @@ public class JpaRestResource<T> {
    *
    * @param routingContext the routing context
    */
-  private void onGetReceived(RoutingContext routingContext) {
+  private <T> void onGetReceived(RoutingContext routingContext, Class<T> entityClass) {
     LOGGER.debug("[GET] >> " + routingContext.request().uri());
     EntityManager em = emf.createEntityManager();
 
@@ -109,7 +111,7 @@ public class JpaRestResource<T> {
    *
    * @param routingContext the routing context
    */
-  private void onPostReceived(RoutingContext routingContext) {
+  private <T> void onPostReceived(RoutingContext routingContext, Class<T> entityClass) {
     LOGGER.debug("[POST] >> " + routingContext.request().uri() + " " + routingContext.getBodyAsJson());
     EntityManager em = emf.createEntityManager();
 
@@ -128,13 +130,14 @@ public class JpaRestResource<T> {
    * Process remove entity
    *
    * @param routingContext the routing context
+   * @param paramId Param name
    */
-  private void onDeleteReceived(RoutingContext routingContext) {
+  private <T> void onDeleteReceived(RoutingContext routingContext, Class<T> entityClass, String paramId) {
     LOGGER.debug("[Delete] >> " + routingContext.request().uri());
     EntityManager em = emf.createEntityManager();
 
     em.getTransaction().begin();
-    String uuid = routingContext.request().params().get("id");
+    String uuid = routingContext.request().params().get(paramId);
     T entity = em.find(entityClass, uuid);
     em.remove(entity);
     em.getTransaction().commit();
@@ -162,5 +165,6 @@ public class JpaRestResource<T> {
       response.setStatusCode(204).end();
     }
   }
+
 
 }

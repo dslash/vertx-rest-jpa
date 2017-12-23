@@ -4,9 +4,10 @@
              xsi:schemaLocation="http://java.sun.com/xml/ns/persistence
  http://java.sun.com/xml/ns/persistence/persistence_1_0.xsd" version="1.0">
 
-  <persistence-unit name="jpa-unit" transaction-type="RESOURCE_LOCAL">
+  <persistence-unit name="jpa-test" transaction-type="RESOURCE_LOCAL">
     <provider>org.eclipse.persistence.jpa.PersistenceProvider</provider>
     <class>com.github.dslash.bo.Book</class>
+    <class>com.github.dslash.bo.Author</class>
     <properties>
       <property name="javax.persistence.schema-generation.database.action" value="drop-and-create"/>
       <property name="javax.persistence.jdbc.driver" value="org.apache.derby.jdbc.EmbeddedDriver"/>
