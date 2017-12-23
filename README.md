@@ -2,4 +2,4 @@
 Persistence mapping between REST resources and JPA entities.
 
 ## Build status
-https://travis-ci.org/dslash/vertx-rest-jpa.svg?branch=master
+[![Build Status](https://travis-ci.org/dslash/vertx-rest-jpa.svg?branch=develop)](https://travis-ci.org/dslash/vertx-rest-jpa)
