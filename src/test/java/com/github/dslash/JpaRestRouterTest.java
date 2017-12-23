@@ -33,7 +33,7 @@ public class JpaRestRouterTest {
    * Timeout for all test methods.
    */
   @Rule
-  public Timeout timeoutRule = new Timeout(5, TimeUnit.SECONDS);
+  public Timeout timeoutRule = new Timeout(30, TimeUnit.SECONDS);
 
   /**
    * Vertx instance.
