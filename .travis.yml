@@ -1,7 +1,12 @@
 language: java
-sudo: false # faster builds
+sudo: false
+addons:
+  sonarcloud:
+    organization: "dslash-github"
 
-script: "mvn cobertura:cobertura"
+script:
+  - mvn cobertura:cobertura
+  - mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent package sonar:sonar
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
