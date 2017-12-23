@@ -9,7 +9,6 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
-import org.atteo.evo.inflector.English;
 
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
@@ -61,10 +60,7 @@ public class JpaRestRouterImpl implements JpaRestRouter {
     if (fileStream != null) {
       JpaRestEngine engine = new JpaRestEngine(router);
       List<Class<?>> entities = getEntitiesFromJpaContext();
-      entities.forEach(entity -> {
-        String resourceName = "/" + English.plural(entity.getSimpleName().toLowerCase());
-        engine.register(resourceName, entity);
-      });
+      entities.forEach(entity -> engine.register("", entity));
     } else {
       LOGGER.error("Can not find JPA configuration file. Please check if file 'META-INF/persistence.xml' exists");
     }

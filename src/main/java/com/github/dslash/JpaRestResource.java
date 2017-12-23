@@ -6,6 +6,7 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
+import org.atteo.evo.inflector.English;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -57,19 +58,22 @@ public class JpaRestResource<T> {
   /**
    * Create end points for the entity
    *
-   * @param path the root path
+   * @param rootPath the root path
    */
-  public void createEndPoints(String path) {
-    this.createEndPoints(path, this.entityClass);
+  public void createEndPoints(String rootPath) {
+    this.createEndPoints(rootPath, this.entityClass);
   }
 
   /**
    * Register endPoints
    *
-   * @param resourcePath the resourcePath
-   * @param entityClass  the entity class
+   * @param rootPath    the root Path
+   * @param entityClass the entity class
    */
-  private void createEndPoints(String resourcePath, Class<?> entityClass) {
+  private void createEndPoints(String rootPath, Class<?> entityClass) {
+    String resourceName = "/" + English.plural(entityClass.getSimpleName().toLowerCase());
+    String resourcePath = rootPath + resourceName;
+
     LOGGER.debug("Registration of [GET] " + resourcePath);
     router.get(resourcePath).blockingHandler(this::onGetReceived);
 
