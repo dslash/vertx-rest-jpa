@@ -11,11 +11,11 @@ import javax.persistence.Id;
  * FAKE.
  */
 @Entity(name = "book")
-@UuidGenerator(name="ID_GEN")
+@UuidGenerator(name = "ID_GEN")
 public class Book {
 
   @Id
-  @GeneratedValue(generator="ID_GEN")
+  @GeneratedValue(generator = "ID_GEN")
   private String uuid;
 
   @Column

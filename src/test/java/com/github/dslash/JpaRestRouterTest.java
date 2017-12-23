@@ -25,7 +25,7 @@ public class JpaRestRouterTest {
   /**
    * Listening port.
    */
-  public static final int LISTENING_PORT = 8081;
+  private static final int LISTENING_PORT = 8081;
 
   /**
    * Timeout for all test methods.
@@ -69,14 +69,12 @@ public class JpaRestRouterTest {
     Async async = test.async();
 
     // Check the book list
-    client.getNow(LISTENING_PORT, "localhost", "/books", resp -> {
-      resp.bodyHandler(body -> {
-        JsonArray books = body.toJsonArray();
-        test.assertEquals(0, books.size());
+    client.getNow(LISTENING_PORT, "localhost", "/books", resp -> resp.bodyHandler(body -> {
+      JsonArray books = body.toJsonArray();
+      test.assertEquals(0, books.size());
 
-        client.close();
-        async.complete();
-      });
-    });
+      client.close();
+      async.complete();
+    }));
   }
 }

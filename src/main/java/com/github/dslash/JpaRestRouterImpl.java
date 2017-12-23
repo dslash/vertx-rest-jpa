@@ -9,7 +9,6 @@ import io.vertx.core.http.HttpServer;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
-import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
 import org.atteo.evo.inflector.English;
@@ -18,10 +17,7 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.Type;
-import java.io.BufferedReader;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -65,30 +61,28 @@ public class JpaRestRouterImpl implements JpaRestRouter {
   private void createAllRoutes() {
     InputStream fileStream = getClass().getClassLoader().getResourceAsStream("META-INF/persistence.xml");
     if (fileStream != null) {
-      List<Class<?>> entities = getEntitiesFromJpaContext(fileStream);
-      entities.stream().forEach(x -> createRouteForEntity(x));
-    }else{
+      List<Class<?>> entities = getEntitiesFromJpaContext();
+      entities.forEach(this::createRouteForEntity);
+    } else {
       LOGGER.error("Can not find JPA configuration file. Please check if file 'META-INF/persistence.xml' exists");
     }
   }
 
   /**
    * Create all routes for entity
+   *
    * @param entity entity
    */
   private void createRouteForEntity(Class<?> entity) {
     String resourceName = "/" + English.plural(entity.getSimpleName().toLowerCase());
 
-    router.route(HttpMethod.GET, resourceName).handler(rc ->{
-        rc.response().end(new JsonArray().encode());
-    });
+    router.route(HttpMethod.GET, resourceName).handler(rc -> rc.response().end(new JsonArray().encode()));
   }
 
   /**
-   * @param fileStream Jpa configuration file
    * @return The entities (class.getName())
    */
-  private List<Class<?>> getEntitiesFromJpaContext(InputStream fileStream) {
+  private List<Class<?>> getEntitiesFromJpaContext() {
     EntityManagerFactory entityManagerFactory = Persistence.createEntityManagerFactory("jpa-unit");
     Set<EntityType<?>> entities = entityManagerFactory.getMetamodel().getEntities();
     return entities.stream().map(Type::getJavaType).collect(Collectors.toList());

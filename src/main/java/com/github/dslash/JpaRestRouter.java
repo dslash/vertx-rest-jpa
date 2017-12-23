@@ -32,13 +32,15 @@ public interface JpaRestRouter {
 
   /**
    * Start the rest router
+   *
    * @param listeningPort Router listening port
-   * @param handler The handler
+   * @param handler       The handler
    */
   void listen(int listeningPort, Handler<AsyncResult<Void>> handler);
 
   /**
    * Close the router
+   *
    * @param handler The handler
    */
   void close(Handler<AsyncResult<Void>> handler);
