@@ -4,9 +4,7 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServer;
-import io.vertx.core.json.JsonArray;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.Router;
@@ -43,7 +41,7 @@ public class JpaRestRouterImpl implements JpaRestRouter {
   private final HttpServer server;
 
   /**
-   * Constructor
+   * Constructor (package only)
    *
    * @param vertx                Vertx instance
    * @param jpaRestRouterOptions Options
@@ -52,31 +50,24 @@ public class JpaRestRouterImpl implements JpaRestRouter {
     router = Router.router(vertx);
     router.route().handler(BodyHandler.create());
     server = vertx.createHttpServer();
-    createAllRoutes();
+    createRestEngine();
   }
 
   /**
    * Create routes for all found entities.
    */
-  private void createAllRoutes() {
+  private void createRestEngine() {
     InputStream fileStream = getClass().getClassLoader().getResourceAsStream("META-INF/persistence.xml");
     if (fileStream != null) {
+      JpaRestEngine engine = new JpaRestEngine(router);
       List<Class<?>> entities = getEntitiesFromJpaContext();
-      entities.forEach(this::createRouteForEntity);
+      entities.forEach(entity -> {
+        String resourceName = "/" + English.plural(entity.getSimpleName().toLowerCase());
+        engine.register(resourceName, entity);
+      });
     } else {
       LOGGER.error("Can not find JPA configuration file. Please check if file 'META-INF/persistence.xml' exists");
     }
-  }
-
-  /**
-   * Create all routes for entity
-   *
-   * @param entity entity
-   */
-  private void createRouteForEntity(Class<?> entity) {
-    String resourceName = "/" + English.plural(entity.getSimpleName().toLowerCase());
-
-    router.route(HttpMethod.GET, resourceName).handler(rc -> rc.response().end(new JsonArray().encode()));
   }
 
   /**
